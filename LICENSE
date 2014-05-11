@@ -1,15 +1,4 @@
-#MySQL Library for the JellyStyle Framework
-
-A MySQL query builder and ORM that is designed to work as part of the [JellyStyle
-Framework](https://github.com/jellybeansoup/php-framework). It is designed to be
-lightweight and unintrusive, and to allow far simple interactions with the database.
-
-This library is, now and always, a work-in-progress. Using it in production
-environments is not recommended at this stage.
-
-##Released under the BSD License
-
-Copyright © 2014 Daniel Farrelly
+Copyright © 2013 Daniel Farrelly
 
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
