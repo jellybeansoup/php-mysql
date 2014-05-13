@@ -538,7 +538,7 @@
 	  */
 
 		public function first() {
-			return $this->rewind();
+			return ( ( $object = $this->rewind() ) !== false ) ? $object : null;
 		}
 
 	 /**
