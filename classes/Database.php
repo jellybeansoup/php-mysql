@@ -186,6 +186,10 @@
 			  	if( ! is_string( $table ) || ! is_string( $class ) ) {
 				  	unset( $models[$table] );
 			  	}
+			  	// We'll attach the database table too
+			  	if( class_exists( $class ) ) {
+				  	$class::setTable( $this->table( $table ) );
+			  	}
 		  	}
 		  	// Merge the given models with the stored models
 		  	$this->_models = array_merge( $this->_models, $models );
@@ -302,6 +306,13 @@
 			}
 			return $type;
 		}
+
+	 /**
+	  */
+
+	  	public function lastInsertId() {
+		  	return $this->_connection->lastInsertId();
+	  	}
 
 //
 // Tables

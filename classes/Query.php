@@ -40,6 +40,26 @@
 			return $this->objects;
 		}
 
+	 /**
+	  * Convert the object to an array.
+	  *
+	  * @return array The properties of the object as an array.
+	  */
+
+		public function asString() {
+			// Prepare the SQL
+			$clauses = array( 'where', 'group', 'having', 'order', 'limit', 'offset' );
+			$sql = sprintf( "SELECT * FROM `%s`", $this->table->name );
+			$sql .= $this->_parseOptions( $clauses, $arguments );
+			// Prepare the statement
+			if( ! $this->table || ! ( $database = $this->table->database ) ) {
+				throw new \Exception;
+			}
+			$statement = $database->prepare( $sql, $arguments );
+			// Return the complete SQL string
+			return (string) $statement->debugDumpParams();
+		}
+
 //
 // Query details
 //
@@ -125,10 +145,33 @@
 			if( is_string( $conditions ) ) {
 				$conditions = func_get_args();
 			}
-			// Set the conditions
-			$this->_options['where'] = $conditions;
+			// Clean and set the conditions
+			$this->_options['where'] = self::_cleanConditions( $conditions );
 			// Return the query for chaining
 			return $this;
+		}
+
+	 /**
+	  * Clean up the conditions structure by removing unnecessary arrays.
+	  *
+	  * @param array $conditions The array of conditions to clean up.
+	  * @return array The cleaned up conditions array.
+	  */
+
+		private static function _cleanConditions( $conditions ) {
+			// If we get an array
+			if( is_array( $conditions ) ) {
+				// Only one, indexed parameter
+				if( is_indexed( $conditions ) && count( $conditions ) === 1 ) {
+					return end( $conditions );
+				}
+				// Iterate through the array cleaning sub-arrays
+				foreach( $conditions as $key => $value ) {
+					$conditions[$key] = self::_cleanConditions( $value );
+				}
+			}
+			// Return what we got
+			return $conditions;
 		}
 
 	 /**
@@ -335,13 +378,18 @@
 			// Filter the fetched keys
 			$columns = '*';
 			if( is_string( $keys ) ) {
-				$keys = array( $keys );
+				$keys = func_get_args();
 			}
 			if( is_array( $keys ) ) {
 				$columns_array = array();
 				foreach( $keys as $alias => $equation ) {
+					// All columns
+					if( $equation === '*' ) {
+						$columns_array[] = '*';
+						continue;
+					}
 					// The value is a table name
-					if( preg_match('/^[\w\d$_]+$/i',$equation) ) {
+					else if( preg_match('/^[\w\d$_]+$/i',$equation) ) {
 						$equation = '`'.$equation.'`';
 					}
 					// The value is an equation
@@ -358,7 +406,7 @@
 				$columns = implode( ', ', $columns_array );
 			}
 			// Prepare the SQL
-			$sql = sprintf( "SELECT %s FROM `%s`", $columns, $this->_table->name );
+			$sql = sprintf( "SELECT %s FROM `%s`", $columns, $this->table->name );
 			$sql .= $this->_parseOptions( $clauses, $arguments );
 			// Execute the SQL
 			$statement = $this->_executeSQL( $sql, $arguments );
@@ -404,7 +452,7 @@
 				throw new \Exception;
 			}
 			// Prepare the SQL
-			$sql = sprintf( "SELECT COUNT(*) FROM `%s`", $this->_table->name );
+			$sql = sprintf( "SELECT COUNT(*) FROM `%s`", $this->table->name );
 			$sql .= $this->_parseOptions( $clauses, $arguments );
 			// Execute the SQL
 			$statement = $this->_executeSQL( $sql, $arguments );
@@ -450,7 +498,7 @@
 				}
 			}
 			// Prepare the SQL
-			$sql = sprintf( "UPDATE `%s` SET %s", $this->_table->name, implode( ', ', $set ) );
+			$sql = sprintf( "UPDATE `%s` SET %s", $this->table->name, implode( ', ', $set ) );
 			$sql .= $this->_parseOptions( $clauses, $arguments );
 			// Execute the SQL
 			$statement = $this->_executeSQL( $sql, $arguments );
@@ -473,7 +521,7 @@
 			// Clear the current results
 			$this->_results = array();
 			// Prepare the SQL
-			$sql = sprintf( "DELETE FROM `%s`", $this->_table->name );
+			$sql = sprintf( "DELETE FROM `%s`", $this->table->name );
 			$sql .= $this->_parseOptions( $clauses, $arguments );
 			// Execute the SQL
 			$statement = $this->_executeSQL( $sql, $arguments );
@@ -497,7 +545,7 @@
 			// If we fail to execute the query
 			if( ! $statement->execute( $arguments ) ) {
 				$info = $statement->errorInfo();
-			  	throw new InvalidDatabaseException( $info[2], $info[1] );
+			  	throw new InvalidDatabaseException( $info[2], $info[1] ? $info[1] : (string) $this );
 			}
 			// Return the statement
 			return $statement;
@@ -649,7 +697,7 @@
 			}
 			// Given options is not an array, or has no contents
 	   		if( ! is_array( $options ) || empty( $options ) || ! is_array( $keys ) || empty( $keys ) ) {
-	   			return array();
+	   			return null;
 	   		}
 			// Go through the clauses in order, and combine the query together
 			$query = array();
@@ -719,6 +767,8 @@
 	  */
 
 		private static function _traverseConditions( $conditions, &$arguments ) {
+			global $__traversedLevel;
+			$__traversedLevel++;
 			// If the first item is a string, we have a condition
 			if( isset( $conditions[0] ) && is_string( $conditions[0] ) ) {
 				$args = $conditions;
@@ -731,7 +781,7 @@
 					  	$placeholders = implode( ',', array_fill( 0, count($arg), '?' ) );
 					  	// Find the placeholder to replace
 					  	$pos = -1;
-					  	for( $x = 0; $x < $i; $x++ ) {
+					  	for( $x = 0; $x <= $i; $x++ ) {
 						  	$pos = strpos( $conditions, '?', $pos+1 );
 					  	}
 					  	// Insert our placeholder
@@ -745,28 +795,30 @@
 				  	$arguments[] = $arg;
 				}
 				// Return the conditions
+				$__traversedLevel--;
 				return $conditions;
 			}
 			// Otherwise we have a group of conditions
-			else {
-				$x = 0;
-				$results = '';
-				foreach( $conditions as $i => $subarray ) {
-					if( $x++ !== 0 ) {
-						if( is_numeric( $i ) ) {
-							$results .= ' && ';
-						}
-						elseif( $i == 'or' ) {
-							$results .= ' || ';
-						}
-						elseif( $i == 'xor' ) {
-							$results .= ' XOR ';
-						}
+			$x = 0;
+			$results = '';
+			foreach( $conditions as $i => $subarray ) {
+				if( $x++ !== 0 ) {
+					if( is_numeric( $i ) ) {
+						$results .= ' && ';
 					}
-					$results .= self::_traverseConditions( $subarray, $arguments );
+					elseif( $i == 'or' ) {
+						$results .= ' || ';
+					}
+					elseif( $i == 'xor' ) {
+						$results .= ' XOR ';
+					}
 				}
-				return '( '.$results.' )';
+				$results .= $__traversedLevel > 1 ? '( ' : null;
+				$results .= self::_traverseConditions( $subarray, $arguments );
+				$results .= $__traversedLevel > 1 ? ' )' : null;
 			}
+			$__traversedLevel--;
+			return $results;
 		}
 
 	 /**
@@ -780,7 +832,12 @@
 		private static function _parseModifiers( $modifiers, $clause='ORDER BY' ) {
 			// With an array
 			foreach( $modifiers as $key => $order ) {
-				$modifiers[$key] = sprintf( '`%s` %s', $key, $order );
+				if( is_string( $key ) ) {
+					$modifiers[$key] = sprintf( '`%s` %s', $key, $order );
+				}
+				else {
+					$modifiers[$key] = sprintf( '`%s`', $order );
+				}
 			}
 			// Return the parsed modifiers
 			return sprintf( '%s %s', $clause, implode( ', ', $modifiers ) );
