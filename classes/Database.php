@@ -19,7 +19,7 @@
   * @license FreeBSD
   */
 
-  	class Database extends \Framework\Core\Object {
+	class Database extends \Framework\Core\Object {
 
 	 /**
 	  * Dynamic properties
@@ -43,7 +43,7 @@
 	  * @var \Framework\Core\URL
 	  */
 
-	  	private $_server = null;
+		private $_server = null;
 
 	 /**
 	  * Fetch the address for the server.
@@ -52,9 +52,9 @@
 	  *   database name.
 	  */
 
-	  	public function server() {
-	  		return $this->_server;
-	  	}
+		public function server() {
+			return $this->_server;
+		}
 
 	 /**
 	  * The name of the database.
@@ -62,7 +62,7 @@
 	  * @var string
 	  */
 
-	  	private $_name = null;
+		private $_name = null;
 
 	 /**
 	  * Fetch the name of the database.
@@ -70,9 +70,9 @@
 	  * @return string
 	  */
 
-	  	public function name() {
-	  		return $this->_name;
-	  	}
+		public function name() {
+			return $this->_name;
+		}
 
 	 /**
 	  * The connection used by this database for making MySQL queries.
@@ -80,7 +80,7 @@
 	  * @var array
 	  */
 
-	  	private $_connection = null;
+		private $_connection = null;
 
 //
 // Factory
@@ -92,7 +92,7 @@
 	  * @var array
 	  */
 
-	  	private static $_instances = array();
+		private static $_instances = array();
 
 	 /**
 	  * Private constructor
@@ -102,22 +102,22 @@
 	  * @return self
 	  */
 
-	  	private function __construct( \Framework\Core\URL $database ) {
-		  	// Store the database name
-		  	$this->_name = $database->path->lastComponent;
-		  	// Store the server URL
-		  	$database->path = $database->path->pathByDeletingLastComponent();
-		  	$this->_server = $database;
-		  	// Let's try and connect to the database
-		  	try {
+		private function __construct( \Framework\Core\URL $database ) {
+			// Store the database name
+			$this->_name = $database->path->lastComponent;
+			// Store the server URL
+			$database->path = $database->path->pathByDeletingLastComponent();
+			$this->_server = $database;
+			// Let's try and connect to the database
+			try {
 				$dsn = 'mysql:host='.$this->_server->host.';dbname='.$this->_name;
-			  	$this->_connection = new \PDO( $dsn, $this->_server->user, $this->_server->password );
-		  	}
-		  	// Rethrow as an InvalidDatabaseException.
-		  	catch( \PDOException $e ) {
-			  	throw new InvalidDatabaseException( $e->getMessage(), $e->getCode() );
+				$this->_connection = new \PDO( $dsn, $this->_server->user, $this->_server->password );
 			}
-	  	}
+			// Rethrow as an InvalidDatabaseException.
+			catch( \PDOException $e ) {
+				throw new InvalidDatabaseException( $e->getMessage(), $e->getCode() );
+			}
+		}
 
 	 /**
 	  * Connect to a database
@@ -136,16 +136,16 @@
 	  * @return self
 	  */
 
-	  	public static function connect( \Framework\Core\URL $database ) {
-	  		// Get the URL's hash
-	  		$hash = $database->hash();
-	  		// If we have an instance already
-	  		if( isset( self::$_instances[$hash] ) && self::$_instances[$hash] instanceof self ) {
-		  		return self::$_instances[$hash];
-	  		}
-	  		// Create and return a new instance
-	  		return self::$_instances[$hash] = new self( $database );
-	  	}
+		public static function connect( \Framework\Core\URL $database ) {
+			// Get the URL's hash
+			$hash = $database->hash();
+			// If we have an instance already
+			if( isset( self::$_instances[$hash] ) && self::$_instances[$hash] instanceof self ) {
+				return self::$_instances[$hash];
+			}
+			// Create and return a new instance
+			return self::$_instances[$hash] = new self( $database );
+		}
 
 //
 // Table objects
@@ -157,7 +157,7 @@
 	  * @var array
 	  */
 
-	  	private $_models = array();
+		private $_models = array();
 
 	 /**
 	  * Register a collection of classes that represent row data as objects.
@@ -176,24 +176,24 @@
 	  * @return void
 	  */
 
-	  	public function registerModels( $models ) {
-	  		// Not a legit array
-	  		if( $models === null || ! is_array( $models ) ) {
-		  		throw new \InvalidArgumentException;
-	  		}
-		  	// Let's ensure we don't have any weird things in the given array
-		  	foreach( $models as $table => $class ) {
-			  	if( ! is_string( $table ) || ! is_string( $class ) ) {
-				  	unset( $models[$table] );
-			  	}
-			  	// We'll attach the database table too
-			  	if( class_exists( $class ) ) {
-				  	$class::setTable( $this->table( $table ) );
-			  	}
-		  	}
-		  	// Merge the given models with the stored models
-		  	$this->_models = array_merge( $this->_models, $models );
-	  	}
+		public function registerModels( $models ) {
+			// Not a legit array
+			if( $models === null || ! is_array( $models ) ) {
+				throw new \InvalidArgumentException;
+			}
+			// Let's ensure we don't have any weird things in the given array
+			foreach( $models as $table => $class ) {
+				if( ! is_string( $table ) || ! is_string( $class ) ) {
+					unset( $models[$table] );
+				}
+				// We'll attach the database table too
+				if( class_exists( $class ) ) {
+					$class::setTable( $this->table( $table ) );
+				}
+			}
+			// Merge the given models with the stored models
+			$this->_models = array_merge( $this->_models, $models );
+		}
 
 	 /**
 	  * Fetch the name of the model for the given table name.
@@ -202,27 +202,27 @@
 	  * @var string
 	  */
 
-	  	public function modelForTableNamed( $tableName ) {
-	  		// Not a legit table name
-	  		if( ! is_string( $tableName ) ) {
-		  		throw new \InvalidArgumentException;
-	  		}
-		  	// Let's ensure we don't have any weird things in the given array
-		  	if( isset( $this->_models[$tableName] ) ) {
-		  		return $this->_models[$tableName];
-		  	}
-		  	// Default to the basic model class
-		  	return 'MySQL\\Object';
-	  	}
+		public function modelForTableNamed( $tableName ) {
+			// Not a legit table name
+			if( ! is_string( $tableName ) ) {
+				throw new \InvalidArgumentException;
+			}
+			// Let's ensure we don't have any weird things in the given array
+			if( isset( $this->_models[$tableName] ) ) {
+				return $this->_models[$tableName];
+			}
+			// Default to the basic model class
+			return 'MySQL\\Object';
+		}
 
 //
 // Querying the database
 //
 
 	 /**
+	  * Prepare a PDO statement to be run.
 	  *
-	  *
-	  * @param string $query
+	  * @param string $query The MySQL query string (or `\MySQL\Object`) to be prepared. Can optionally contain argument placeholders (i.e. '?').
 	  * @return PDOStatement
 	  */
 
@@ -231,9 +231,11 @@
 		}
 
 	 /**
+	  * Prepares and runs the given query against the database.
 	  *
-	  *
-	  * @param \MySQL\Query $query
+	  * @param mixed $query The MySQL query string (or `\MySQL\Object`) to be run. Can optionally contain argument placeholders (i.e. '?').
+	  * @param array $vars Arguments that match the placeholders in the given query.
+	  * @param string $class A class to use to instantiate the results.
 	  * @return mixed
 	  */
 
@@ -243,7 +245,7 @@
 			// If we fail to execute the query
 			if( ! $statement->execute( $vars ) ) {
 				$info = $statement->errorInfo();
-			  	throw new InvalidDatabaseException( $info[2], $info[1] );
+				throw new InvalidDatabaseException( $info[2], $info[1] );
 			}
 			// We're going to parse the query
 			$scanner = new \Framework\Core\Scanner( $query );
@@ -261,7 +263,7 @@
 					if( preg_match_all( $regex, $query, $matches, PREG_SET_ORDER ) ) {
 						foreach( $matches as $match ) {
 							if( isset( $match[2] ) ) {
-								$alias = $this->trim_table_name( ( isset( $match[4] ) && strlen( $match[4] ) > 0 ) ? $match[4] : $match[2] );
+								$alias = $this->_trimTableName( ( isset( $match[4] ) && strlen( $match[4] ) > 0 ) ? $match[4] : $match[2] );
 								$tables[$alias] = trim( $match[2], "` \t\n\r\0\x0B" );
 							}
 						}
@@ -273,13 +275,13 @@
 							$names = explode( ',', $match[1] );
 							foreach( $names as $segment ) {
 								if( preg_match( "/{$name_alias}/uism", $segment, $match ) ) {
-									$alias = $this->trim_table_name( ( isset( $match[3] ) && strlen( $match[3] ) > 0 ) ? $match[3] : $match[1] );
+									$alias = $this->_trimTableName( ( isset( $match[3] ) && strlen( $match[3] ) > 0 ) ? $match[3] : $match[1] );
 									$tables[$alias] = trim( $match[1], "` \t\n\r\0\x0B" );
 								}
 							}
 						}
 						else {
-							$alias = trim_table_name( ( isset( $match[4] ) && strlen( $match[4] ) > 0 ) ? $match[4] : $match[2] );
+							$alias = _trimTableName( ( isset( $match[4] ) && strlen( $match[4] ) > 0 ) ? $match[4] : $match[2] );
 							$tables[$alias] = trim( $match[2], "` \t\n\r\0\x0B" );
 						}
 					}
@@ -308,11 +310,14 @@
 		}
 
 	 /**
+	  * Fetches the ID for a newly inserted row.
+	  *
+	  * @return int The identifier for the inserted row.
 	  */
 
-	  	public function lastInsertId() {
-		  	return $this->_connection->lastInsertId();
-	  	}
+		public function lastInsertId() {
+			return $this->_connection->lastInsertId();
+		}
 
 //
 // Tables
@@ -324,8 +329,8 @@
 	  * @return array A collection of `\MySQL\Table` objects.
 	  */
 
-	  	public function tables() {
-	  	}
+		public function tables() {
+		}
 
 	 /**
 	  * Get the table matching the given name.
@@ -334,14 +339,14 @@
 	  * @return \MySQL\Table
 	  */
 
-	  	public function table( $tableName ) {
-	  		// Not a legit table name
-	  		if( ! is_string( $tableName ) ) {
-		  		throw new \InvalidArgumentException;
-	  		}
-	  		// Return a table object
-		  	return new \MySQL\Table( $this, $tableName );
-	  	}
+		public function table( $tableName ) {
+			// Not a legit table name
+			if( ! is_string( $tableName ) ) {
+				throw new \InvalidArgumentException;
+			}
+			// Return a table object
+			return new \MySQL\Table( $this, $tableName );
+		}
 
 //
 // Utilities
@@ -350,26 +355,26 @@
 	 /**
 	  * Trim spaces and quotes from the extremities of the given table name.
 	  *
-	  * @param string $table_name The name of the table you want to trim.
+	  * @param string $tableName The name of the table you want to trim.
 	  * @return string The trimmed table name.
 	  */
 
-		private function trim_table_name( $table_name ) {
-			return trim( $table_name, "` \t\n\r\0\x0B" );
+		private function _trimTableName( $tableName ) {
+			return trim( $tableName, "` \t\n\r\0\x0B" );
 		}
 
 	}
 
  /**
-  * Class Manager Exception
+  * Exception used when a database error occurs.
   */
 
-  	class DatabaseException extends \Exception {
-  	}
+	class DatabaseException extends \Exception {
+	}
 
  /**
-  * Class Manager Exception
+  * Specialised database exception for when the database is invalid.
   */
 
-  	class InvalidDatabaseException extends DatabaseException {
-  	}
+	class InvalidDatabaseException extends DatabaseException {
+	}

@@ -16,7 +16,7 @@
   * @license FreeBSD
   */
 
-  	class Query extends \Framework\Core\Object implements \Iterator {
+	class Query extends \Framework\Core\Object implements \Iterator {
 
 	 /**
 	  * Array of properties that act as aliases of methods
@@ -78,9 +78,9 @@
 	  * @return \MySQL\Table The database table.
 	  */
 
-	  	public function table() {
-	  		return $this->_table;
-	  	}
+		public function table() {
+			return $this->_table;
+		}
 
 	 /**
 	  * The query options.
@@ -96,12 +96,12 @@
 	  * @return array The options for this query
 	  */
 
-	  	public function options() {
-	  		return $this->_options;
-	  	}
+		public function options() {
+			return $this->_options;
+		}
 
 	 /**
-	  *
+	  * PHP Constructor
 	  *
 	  * @param \MySQL\Database $database
 	  * @param string $table
@@ -149,29 +149,6 @@
 			$this->_options['where'] = self::_cleanConditions( $conditions );
 			// Return the query for chaining
 			return $this;
-		}
-
-	 /**
-	  * Clean up the conditions structure by removing unnecessary arrays.
-	  *
-	  * @param array $conditions The array of conditions to clean up.
-	  * @return array The cleaned up conditions array.
-	  */
-
-		private static function _cleanConditions( $conditions ) {
-			// If we get an array
-			if( is_array( $conditions ) ) {
-				// Only one, indexed parameter
-				if( is_indexed( $conditions ) && count( $conditions ) === 1 ) {
-					return end( $conditions );
-				}
-				// Iterate through the array cleaning sub-arrays
-				foreach( $conditions as $key => $value ) {
-					$conditions[$key] = self::_cleanConditions( $value );
-				}
-			}
-			// Return what we got
-			return $conditions;
 		}
 
 	 /**
@@ -337,6 +314,29 @@
 			}
 			// Return the query for chaining
 			return $this;
+		}
+
+	 /**
+	  * Clean up the conditions structure by removing unnecessary arrays.
+	  *
+	  * @param array $conditions The array of conditions to clean up.
+	  * @return array The cleaned up conditions array.
+	  */
+
+		private static function _cleanConditions( $conditions ) {
+			// If we get an array
+			if( is_array( $conditions ) ) {
+				// Only one, indexed parameter
+				if( is_indexed( $conditions ) && count( $conditions ) === 1 ) {
+					return end( $conditions );
+				}
+				// Iterate through the array cleaning sub-arrays
+				foreach( $conditions as $key => $value ) {
+					$conditions[$key] = self::_cleanConditions( $value );
+				}
+			}
+			// Return what we got
+			return $conditions;
 		}
 
 //
@@ -545,7 +545,7 @@
 			// If we fail to execute the query
 			if( ! $statement->execute( $arguments ) ) {
 				$info = $statement->errorInfo();
-			  	throw new InvalidDatabaseException( $info[2], $info[1] ? $info[1] : (string) $this );
+				throw new InvalidDatabaseException( $info[2], $info[1] ? $info[1] : (string) $this );
 			}
 			// Return the statement
 			return $statement;
@@ -665,13 +665,13 @@
 				$this->fetch();
 			}
 			// Get a copy of the results
-		  	$objects = array_values( $this->_results );
-		  	// Walk through the array and replace them with the plucked value
-		  	array_walk($objects,function(&$value) use($key) {
-			  	$value = $value->$key;
-		  	});
-		  	// Return a unique array
-		  	return array_values( array_unique( $objects, SORT_REGULAR ) );
+			$objects = array_values( $this->_results );
+			// Walk through the array and replace them with the plucked value
+			array_walk($objects,function(&$value) use($key) {
+				$value = $value->$key;
+			});
+			// Return a unique array
+			return array_values( array_unique( $objects, SORT_REGULAR ) );
 		}
 
 //
@@ -775,24 +775,24 @@
 				$conditions = array_shift( $args );
 				// Prepare the arguments
 				foreach( $args as $i => $arg ) {
-				  	// Uh oh! An array!
-				  	if( is_array( $arg ) ) {
-					  	// Create some placeholders and stick them into the conditions
-					  	$placeholders = implode( ',', array_fill( 0, count($arg), '?' ) );
-					  	// Find the placeholder to replace
-					  	$pos = -1;
-					  	for( $x = 0; $x <= $i; $x++ ) {
-						  	$pos = strpos( $conditions, '?', $pos+1 );
-					  	}
-					  	// Insert our placeholder
-					  	$conditions = substr_replace( $conditions, '('.$placeholders.')', $pos, 1 );
-					  	// Add all the arguments
-					  	$arguments = array_merge( $arguments, $arg );
-					  	// Move on.
-					  	continue;
-				  	}
-				  	// Add this argument IT'S TOTALLY SAFE YOU GUYS
-				  	$arguments[] = $arg;
+					// Uh oh! An array!
+					if( is_array( $arg ) ) {
+						// Create some placeholders and stick them into the conditions
+						$placeholders = implode( ',', array_fill( 0, count($arg), '?' ) );
+						// Find the placeholder to replace
+						$pos = -1;
+						for( $x = 0; $x <= $i; $x++ ) {
+							$pos = strpos( $conditions, '?', $pos+1 );
+						}
+						// Insert our placeholder
+						$conditions = substr_replace( $conditions, '('.$placeholders.')', $pos, 1 );
+						// Add all the arguments
+						$arguments = array_merge( $arguments, $arg );
+						// Move on.
+						continue;
+					}
+					// Add this argument IT'S TOTALLY SAFE YOU GUYS
+					$arguments[] = $arg;
 				}
 				// Return the conditions
 				$__traversedLevel--;

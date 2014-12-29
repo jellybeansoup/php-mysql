@@ -6,9 +6,9 @@
 	namespace MySQL;
 
  /**
-  * Represents MySQL data as objects.
+  * Base class for representing rows within a given MySQL table as objects.
   *
-  * This class provides a number of methods for interacting with a MySQL database.
+  * This class is not designed to be used directly, but should be subclassed to represent a given table's data.
   *
   * @package Framework\MySQL
   * @author Daniel Farrelly <daniel@jellystyle.com>
@@ -16,7 +16,7 @@
   * @license FreeBSD
   */
 
-  	class Object extends Result {
+	class Object extends Result {
 
 //
 // Default table

@@ -16,7 +16,7 @@
   * @license FreeBSD
   */
 
-  	class Table extends \Framework\Core\Object {
+	class Table extends \Framework\Core\Object {
 
 	 /**
 	  * Array of properties that act as aliases of methods
@@ -114,7 +114,7 @@
 	  * the value as the second, like so:
 	  *
 	  * ```
-	  * $query->insert( 'column', 'value' );
+	  * $query->insert( array( 'column' => 'value' ) );
 	  * ```
 	  *
 	  * @param array $values An associative array of values to insert.
@@ -147,7 +147,7 @@
 			// If we fail to execute the query
 			if( ! $statement->execute( $arguments ) ) {
 				$info = $statement->errorInfo();
-			  	throw new InvalidDatabaseException( $info[2], $info[1] );
+				throw new InvalidDatabaseException( $info[2], $info[1] );
 			}
 			// Return the number of rows deleted
 			return $statement->rowCount();

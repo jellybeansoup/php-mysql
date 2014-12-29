@@ -9,9 +9,10 @@
 	use \PDOStatement;
 
  /**
-  * Represents MySQL data as objects.
+  * Represents data from a MySQL query as objects.
   *
-  * This class provides a number of methods for interacting with a MySQL database.
+  * This class provides a number of methods for interacting with a MySQL database, and is used to provide the results
+  * of a query in the absence of specialised subclasses of `Framework\MySQL\Object`.
   *
   * @package Framework\MySQL
   * @author Daniel Farrelly <daniel@jellystyle.com>
@@ -19,7 +20,7 @@
   * @license FreeBSD
   */
 
-  	class Result extends \Framework\Core\Object {
+	class Result extends \Framework\Core\Object {
 
 	 /**
 	  * Collection for storing the object's property values
@@ -27,7 +28,7 @@
 	  * @var array
 	  */
 
-	  	private $_values = array();
+		private $_values = array();
 
 	 /**
 	  * Flag indicating whether the object has been constructed or not
@@ -35,7 +36,7 @@
 	  * @var bool
 	  */
 
-	  	private $_constructed = false;
+		private $_constructed = false;
 
 	 /**
 	  * Collection for storing the object's property values
