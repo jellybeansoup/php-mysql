@@ -124,10 +124,12 @@
 		public function insert( $values ) {
 			// Get the database, no point continuing without it
 			if( ! ( $database = $this->database ) ) {
-				throw new \Exception;
+				throw new \DatabaseException( 'Database has not been provided.' );
 			}
+
 			// Create an array for arguments
 			$arguments = array();
+
 			// Parse the values
 			if( func_num_args() == 2 && is_string( $values ) ) {
 				$args = func_get_args();
@@ -140,15 +142,19 @@
 					$arguments[] = $value;
 				}
 			}
+
 			// Prepare the SQL
 			$sql = sprintf( "INSERT INTO `%s` SET %s", $this->name, implode( ', ', $set ) );
+
 			// Prepare the statement
 			$statement = $database->prepare( $sql );
+
 			// If we fail to execute the query
 			if( ! $statement->execute( $arguments ) ) {
 				$info = $statement->errorInfo();
 				throw new InvalidDatabaseException( $info[2], $info[1] );
 			}
+
 			// Return the number of rows deleted
 			return $statement->rowCount();
 		}
@@ -162,12 +168,90 @@
 		public function query( $conditions=null ) {
 			// Create the query
 			$query = new \MySQL\Query( $this );
+
 			// Set the conditions if we have them
 			if( func_num_args() > 0 ) {
 				$query->callMethod( 'conditions', func_get_args() );
 			}
+
 			// Return the created query
 			return $query;
+		}
+
+//
+// Getting information about the table
+//
+
+	 /**
+	  * Get the "CREATE TABLE" query.
+	  *
+	  * @return string
+	  */
+
+		private function _createTableQuery() {
+			// Get the database, no point continuing without it
+			if( ! ( $database = $this->database ) ) {
+				throw new \DatabaseException( 'Database has not been provided.' );
+			}
+
+			// Prepare the SQL
+			$sql = sprintf( "SHOW CREATE TABLE `%s`", $this->name );
+
+			// Prepare the statement
+			$results = $database->query( $sql );
+
+			// If we don't get back a valid result, throw an exception.
+			if( ! isset( $results[0] ) || ! $results[0]->hasProperty('Create Table') ) {
+				throw new \Exception( 'Couldn\'t find the `Create Table` value in the query results.' );
+			}
+
+			// Return the query string.
+			return $results[0]->valueOfProperty('Create Table');
+		}
+
+	 /**
+	  * Get the column names used for creating the primary key.
+	  *
+	  * @return string
+	  */
+
+		public function primaryKey() {
+			// Get the 'Create Table' query.
+			$create_table = $this->_createTableQuery();
+
+			// Try matching the primary key, and return null if none is found.
+			if( ! preg_match("/PRIMARY\sKEY\s\(([^\)]+)\)/uix", $create_table, $match ) ) {
+				return null;
+			}
+
+			// Default for tiny speed savings.
+			if( $match[1] === '`id`' || $match[1] === 'id' ) {
+				return array( 'id' );
+			}
+
+			// Turn the string of columns into an array
+			$columns = explode( ',', $match[1] );
+
+			// Trim the table names
+			$columns = array_map( '\MySQL\Table::_trimTableName', $columns );
+
+			// Return the array
+			return $columns;
+		}
+
+//
+// Utilities
+//
+
+	 /**
+	  * Trim spaces and quotes from the extremities of the given table name.
+	  *
+	  * @param string $tableName The name of the table you want to trim.
+	  * @return string The trimmed table name.
+	  */
+
+		private static function _trimTableName( $tableName ) {
+			return trim( $tableName, "` \t\n\r\0\x0B" );
 		}
 
 	}

@@ -135,18 +135,22 @@
 			if( ! is_string( $conditions ) && ! is_array( $conditions ) && $conditions !== null ) {
 				throw new \InvalidArgumentException;
 			}
+
 			// Remove the conditions
 			if( $conditions == null ) {
 				unset( $this->_options['where'] );
 				// Return the query for chaining
 				return $this;
 			}
+
 			// We've got some simple conditions
 			if( is_string( $conditions ) ) {
 				$conditions = func_get_args();
 			}
+
 			// Clean and set the conditions
 			$this->_options['where'] = self::_cleanConditions( $conditions );
+
 			// Return the query for chaining
 			return $this;
 		}
@@ -326,15 +330,32 @@
 		private static function _cleanConditions( $conditions ) {
 			// If we get an array
 			if( is_array( $conditions ) ) {
+
+				// A completely associative array usually means keys and values
+				// so we prepare our standard query string and arguments.
+				if( is_assoc( $conditions, true ) ) {
+					$query = array();
+					$arguments = array();
+					foreach( $conditions as $column => $value ) {
+						$query[] = '`'.$column.'` = ?';
+						$arguments[] = $value;
+					}
+					array_unshift( $arguments, implode( ' && ', $query ) );
+					return $arguments;
+				}
+
 				// Only one, indexed parameter
-				if( is_indexed( $conditions ) && count( $conditions ) === 1 ) {
+				else if( is_indexed( $conditions ) && count( $conditions ) === 1 ) {
 					return end( $conditions );
 				}
+
 				// Iterate through the array cleaning sub-arrays
 				foreach( $conditions as $key => $value ) {
 					$conditions[$key] = self::_cleanConditions( $value );
 				}
+
 			}
+
 			// Return what we got
 			return $conditions;
 		}

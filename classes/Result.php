@@ -77,7 +77,7 @@
 	  */
 
 		public function propertyIsMutable( $property ) {
-			return ( parent::propertyIsMutable( $property ) || ! $this->_constructed );
+			return ( parent::propertyIsMutable( $property ) || self::_dynamicPropertyArgument( $property, 'mutable' ) !== false || ! $this->_constructed );
 		}
 
 	 /**
@@ -88,7 +88,7 @@
 	  */
 
 		public function propertyIsPublic( $property ) {
-			return ( parent::propertyIsPublic( $property ) || isset( $this->_values[$property] ) );
+			return ( parent::propertyIsPublic( $property ) || self::_dynamicPropertyArgument( $property, 'public' ) !== false );
 		}
 
 	 /**
