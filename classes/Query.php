@@ -55,9 +55,12 @@
 			if( ! $this->table || ! ( $database = $this->table->database ) ) {
 				throw new \Exception;
 			}
-			$statement = $database->prepare( $sql, $arguments );
-			// Return the complete SQL string
-			return (string) $statement->debugDumpParams();
+			// Replace placeholders with arguments
+			foreach( $arguments as $i => $argument ) {
+				$sql = preg_replace( '/\?/', "'{$argument}'", $sql, 1 );
+			}
+			// Return
+			return $sql;
 		}
 
 //
