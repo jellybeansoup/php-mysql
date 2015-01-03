@@ -78,7 +78,7 @@
 		}
 
 //
-// Operations
+// Identifying the object
 //
 
 	 /**
@@ -132,13 +132,24 @@
 //
 
 	 /**
+	  * Shorthand function for creating a query against the class' table.
+	  *
+	  * @param $conditions array A conditions array as accepted by `\MySQL\Query::conditions`.
+	  * @return \MySQL\Query A query for matching objects with the provided conditions.
+	  */
+
+		final public static function query( $conditions=array() ) {
+			return self::table()->query( $conditions );
+		}
+
+	 /**
 	  * Creates a query for matching the reciever in the database.
 	  *
 	  * @return \MySQL\Query A query used to match the current object. If the object is not in the database, returns null.
 	  */
 
 		final private function _selfQuery() {
-			return self::table()->query( $this->primaryKey() );
+			return self::query( $this->primaryKey() );
 		}
 
 	 /**
