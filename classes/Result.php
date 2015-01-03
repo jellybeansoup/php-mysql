@@ -77,7 +77,7 @@
 	  */
 
 		public function propertyIsMutable( $property ) {
-			return ( parent::propertyIsMutable( $property ) || self::_dynamicPropertyArgument( $property, 'mutable' ) !== false || ! $this->_constructed );
+			return ( self::_dynamicPropertyArgument( $property, 'mutable' ) !== false || ! $this->_constructed );
 		}
 
 	 /**
@@ -88,7 +88,7 @@
 	  */
 
 		public function propertyIsPublic( $property ) {
-			return ( parent::propertyIsPublic( $property ) || self::_dynamicPropertyArgument( $property, 'public' ) !== false );
+			return ( self::_dynamicPropertyArgument( $property, 'public' ) !== false && isset( $this->_values[$property] ) );
 		}
 
 	 /**
@@ -103,6 +103,12 @@
 			if( $this->propertyIsPublic( $property ) ) {
 				return $this->_values[$property];
 			}
+
+			// Default to the super implementation
+			else if( parent::propertyIsPublic( $property ) ) {
+				return parent::valueOfProperty( $property );
+			}
+
 			// Default to null
 			return null;
 		}
@@ -119,6 +125,11 @@
 			// If the property exists, set the value.
 			if( $this->propertyIsMutable( $property ) ) {
 				$this->_values[$property] = $value;
+			}
+
+			// Default to the super implementation
+			else if( parent::propertyIsMutable( $property ) ) {
+				parent::setValueOfProperty( $property, $value );
 			}
 		}
 
