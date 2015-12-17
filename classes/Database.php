@@ -316,7 +316,19 @@
 	  */
 
 		public function lastInsertId() {
-			return $this->_connection->lastInsertId();
+			$last_insert_id = intval( $this->_connection->lastInsertId() );
+
+			// Attempt to get the value with a query if the PDO method fails
+			if( $last_insert_id === 0 ) {
+				$results = $this->query('SELECT LAST_INSERT_ID() AS `last_insert_id`');
+				if( ! isset( $results[0] ) || ! $results[0]->hasProperty('last_insert_id') ) {
+					throw new \Exception( 'Couldn\'t fetch the database\'s last insert ID.' );
+				}
+				$last_insert_id = $results[0]->valueOfProperty('last_insert_id');
+			}
+
+			// Return
+			return $last_insert_id;
 		}
 
 //

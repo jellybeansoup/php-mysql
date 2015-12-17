@@ -173,12 +173,12 @@
 
 			// If the object is new, we insert
 			if( $this->_new ) {
-				// Try inserting the data
 				$success = self::table()->insert( parent::asArray() );
+				$insert_id = intval( self::table()->database()->lastInsertId() );
 
 				// Apply the incremented primary key
 				$primary_key = $this->primaryKey( false );
-				if( count( $primary_key ) === 1 && ( $insert_id = self::table()->database()->lastInsertId() ) !== 0 ) {
+				if( count( $primary_key ) === 1 && $insert_id !== 0 ) {
 					$this->setValueOfProperty( $primary_key[0], $insert_id );
 				}
 
