@@ -94,6 +94,14 @@
 		private $_options = array();
 
 	 /**
+	  * The query options.
+	  *
+	  * @var array
+	  */
+
+		private $_lockedOptions = null;
+
+	 /**
 	  * Fetch the query options.
 	  *
 	  * @return array The options for this query
@@ -324,43 +332,20 @@
 		}
 
 	 /**
-	  * Clean up the conditions structure by removing unnecessary arrays.
+	  * Locks the current set of query parameters
 	  *
-	  * @param array $conditions The array of conditions to clean up.
-	  * @return array The cleaned up conditions array.
+	  * @param int $offset
+	  * @return self
 	  */
 
-		private static function _cleanConditions( $conditions ) {
-			// If we get an array
-			if( is_array( $conditions ) ) {
-
-				// A completely associative array usually means keys and values
-				// so we prepare our standard query string and arguments.
-				if( is_assoc( $conditions, true ) ) {
-					$query = array();
-					$arguments = array();
-					foreach( $conditions as $column => $value ) {
-						$query[] = '`'.$column.'` = ?';
-						$arguments[] = $value;
-					}
-					array_unshift( $arguments, implode( ' && ', $query ) );
-					return $arguments;
-				}
-
-				// Only one, indexed parameter
-				else if( is_indexed( $conditions ) && count( $conditions ) === 1 ) {
-					return end( $conditions );
-				}
-
-				// Iterate through the array cleaning sub-arrays
-				foreach( $conditions as $key => $value ) {
-					$conditions[$key] = self::_cleanConditions( $value );
-				}
-
+		public function lock() {
+			if( $this->_lockedOptions == null ) {
+				// Syphon off the conditions
+				$lockable_clauses = array_flip( array( 'where' ) );
+				$this->_lockedOptions = array_intersect_key( $this->options, $lockable_clauses );
+				$this->_options = array_diff_key( $this->options, $lockable_clauses );
 			}
-
-			// Return what we got
-			return $conditions;
+			return $this;
 		}
 
 //
@@ -559,7 +544,7 @@
 	  * @return int The number of results deleted.
 	  */
 
-		private function _executeSQL( $sql, $arguments ) {
+		protected function _executeSQL( $sql, $arguments ) {
 			// Get the database, no point continuing without it
 			if( ! $this->table || ! ( $database = $this->table->database ) ) {
 				throw new \Exception;
@@ -703,6 +688,46 @@
 //
 
 	 /**
+	  * Clean up the conditions structure by removing unnecessary arrays.
+	  *
+	  * @param array $conditions The array of conditions to clean up.
+	  * @return array The cleaned up conditions array.
+	  */
+
+		private static function _cleanConditions( $conditions ) {
+			// If we get an array
+			if( is_array( $conditions ) ) {
+
+				// A completely associative array usually means keys and values
+				// so we prepare our standard query string and arguments.
+				if( is_assoc( $conditions, true ) ) {
+					$query = array();
+					$arguments = array();
+					foreach( $conditions as $column => $value ) {
+						$query[] = '`'.$column.'` = ?';
+						$arguments[] = $value;
+					}
+					array_unshift( $arguments, implode( ' && ', $query ) );
+					return $arguments;
+				}
+
+				// Only one, indexed parameter
+				else if( is_indexed( $conditions ) && count( $conditions ) === 1 ) {
+					return end( $conditions );
+				}
+
+				// Iterate through the array cleaning sub-arrays
+				foreach( $conditions as $key => $value ) {
+					$conditions[$key] = self::_cleanConditions( $value );
+				}
+
+			}
+
+			// Return what we got
+			return $conditions;
+		}
+
+	 /**
 	  * Parse the query options into a string.
 	  *
 	  * @param array $keys An array of the options keys to include in the parsed string.
@@ -712,12 +737,19 @@
 	  * @return string The parsed options.
 	  */
 
-		private function _parseOptions( $keys, &$arguments=null ) {
+		protected function _parseOptions( $keys, &$arguments=null ) {
 			// Get the options
 			$options = $this->_options;
 			// Prepare the arguments
 			if( ! is_array( $arguments ) ) {
 				$arguments = array();
+			}
+			// Combine the locked where clause
+			if( isset( $this->_lockedOptions['where'] ) && isset( $options['where'] ) ) {
+				$options['where'] = array( $this->_lockedOptions['where'], $options['where'] );
+			}
+			else if( isset( $this->_lockedOptions['where'] ) ) {
+				$options['where'] = $this->_lockedOptions['where'];
 			}
 			// Given options is not an array, or has no contents
 	   		if( ! is_array( $options ) || empty( $options ) || ! is_array( $keys ) || empty( $keys ) ) {
@@ -769,7 +801,7 @@
 	  * @return string The given conditions as a valid SQL clause.
 	  */
 
-		private static function _parseConditions( $conditions, &$arguments=array(), $clause='WHERE' ) {
+		protected static function _parseConditions( $conditions, &$arguments=array(), $clause='WHERE' ) {
 			// With a string
 			if( is_string( $conditions ) ) {
 				return sprintf( '%s %s', $clause, $conditions );
@@ -790,7 +822,7 @@
 	  * @return string The given conditions as a valid SQL clause.
 	  */
 
-		private static function _traverseConditions( $conditions, &$arguments ) {
+		protected static function _traverseConditions( $conditions, &$arguments ) {
 			global $__traversedLevel;
 			$__traversedLevel++;
 			// If the first item is a string, we have a condition
@@ -837,9 +869,7 @@
 						$results .= ' XOR ';
 					}
 				}
-				$results .= $__traversedLevel > 1 ? '( ' : null;
-				$results .= self::_traverseConditions( $subarray, $arguments );
-				$results .= $__traversedLevel > 1 ? ' )' : null;
+				$results .= '( '.self::_traverseConditions( $subarray, $arguments ).' )';
 			}
 			$__traversedLevel--;
 			return $results;
@@ -853,7 +883,7 @@
 	  * @return string The SQL clause
 	  */
 
-		private static function _parseModifiers( $modifiers, $clause='ORDER BY' ) {
+		protected static function _parseModifiers( $modifiers, $clause='ORDER BY' ) {
 			// With an array
 			foreach( $modifiers as $key => $order ) {
 				if( is_string( $key ) ) {

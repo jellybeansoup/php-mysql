@@ -139,6 +139,9 @@
 	  */
 
 		final public static function query( $conditions=array() ) {
+			if( is_string( $conditions ) ) {
+				$conditions = func_get_args();
+			}
 			return self::table()->query( $conditions );
 		}
 
