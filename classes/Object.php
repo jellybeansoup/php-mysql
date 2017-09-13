@@ -191,7 +191,7 @@
 
 			// Otherwise we update
 			else if( ( $query = $this->_selfQuery() ) !== null ) {
-				$success = $query->update( parent::asArray() );
+				$success = $query->set( parent::asArray() );
 			}
 
 			// Call the "after saving" method, if it exists.
