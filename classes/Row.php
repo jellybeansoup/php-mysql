@@ -16,7 +16,7 @@
   * @license FreeBSD
   */
 
-	class Object extends Result {
+	class Row extends Result {
 
 //
 // Creating the object

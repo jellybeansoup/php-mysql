@@ -16,7 +16,7 @@
   * @license FreeBSD
   */
 
-	class Query extends \Framework\Core\Object implements \Iterator {
+	class Query extends \Framework\Core\Base implements \Iterator {
 
 	 /**
 	  * Array of properties that act as aliases of methods

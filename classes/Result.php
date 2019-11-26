@@ -12,7 +12,7 @@
   * Represents data from a MySQL query as objects.
   *
   * This class provides a number of methods for interacting with a MySQL database, and is used to provide the results
-  * of a query in the absence of specialised subclasses of `Framework\MySQL\Object`.
+  * of a query in the absence of specialised subclasses of `Framework\MySQL\Row`.
   *
   * @package Framework\MySQL
   * @author Daniel Farrelly <daniel@jellystyle.com>
@@ -20,7 +20,7 @@
   * @license FreeBSD
   */
 
-	class Result extends \Framework\Core\Object {
+	class Result extends \Framework\Core\Base {
 
 	 /**
 	  * Collection for storing the object's property values

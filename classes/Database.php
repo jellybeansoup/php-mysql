@@ -19,12 +19,12 @@
   * @license FreeBSD
   */
 
-	class Database extends \Framework\Core\Object {
+	class Database extends \Framework\Core\Base {
 
 	 /**
 	  * Dynamic properties
 	  *
-	  * @see Framework\Core\Object::$_dynamicProperties
+	  * @see Framework\Core\Base::$_dynamicProperties
 	  * @var array
 	  */
 
@@ -212,7 +212,7 @@
 				return $this->_models[$tableName];
 			}
 			// Default to the basic model class
-			return 'MySQL\\Object';
+			return 'MySQL\\Row';
 		}
 
 //
@@ -222,7 +222,7 @@
 	 /**
 	  * Prepare a PDO statement to be run.
 	  *
-	  * @param string $query The MySQL query string (or `\MySQL\Object`) to be prepared. Can optionally contain argument placeholders (i.e. '?').
+	  * @param string $query The MySQL query string (or `\MySQL\Row`) to be prepared. Can optionally contain argument placeholders (i.e. '?').
 	  * @return PDOStatement
 	  */
 
@@ -233,13 +233,13 @@
 	 /**
 	  * Prepares and runs the given query against the database.
 	  *
-	  * @param mixed $query The MySQL query string (or `\MySQL\Object`) to be run. Can optionally contain argument placeholders (i.e. '?').
+	  * @param mixed $query The MySQL query string (or `\MySQL\Row`) to be run. Can optionally contain argument placeholders (i.e. '?').
 	  * @param array $vars Arguments that match the placeholders in the given query.
 	  * @param string $class A class to use to instantiate the results.
 	  * @return mixed
 	  */
 
-		public function query( $query, $vars=null, $class='MySQL\\Object' ) {
+		public function query( $query, $vars=null, $class='MySQL\\Row' ) {
 			// Prepare the statement
 			$statement = $this->prepare( $query );
 			// If we fail to execute the query
@@ -254,7 +254,7 @@
 			// SELECT
 			if( $type == 'select'  ) {
 				// Find a class for the main table
-				if( $class === 'MySQL\\Object' ) {
+				if( $class === 'MySQL\\Row' ) {
 					$name_syntax = "([\w_\-]+|`[\w_\-]+`)";
 					$name_alias = "{$name_syntax}(\s+AS\s+{$name_syntax})?";
 					$tables = array();

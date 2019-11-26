@@ -16,7 +16,7 @@
   * @license FreeBSD
   */
 
-	class Table extends \Framework\Core\Object {
+	class Table extends \Framework\Core\Base {
 
 	 /**
 	  * Array of properties that act as aliases of methods
