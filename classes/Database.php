@@ -110,7 +110,8 @@
 			$this->_server = $database;
 			// Let's try and connect to the database
 			try {
-				$dsn = 'mysql:host='.$this->_server->host.';dbname='.$this->_name;
+				$host = $this->_server->host ? 'host='.$this->_server->host.';' : '';
+				$dsn = 'mysql:'.$host.'dbname='.$this->_name;
 				$this->_connection = new \PDO( $dsn, $this->_server->user, $this->_server->password );
 			}
 			// Rethrow as an InvalidDatabaseException.
